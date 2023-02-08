@@ -6,18 +6,19 @@ import abi from "./utils/WavePortal.json";
 const App = () => {
   /* ユーザーのパブリックウォレットを保存するために使用する状態変数を定義します */
   const [currentAccount, setCurrentAccount] = useState("");
-  /* ユーザーのメッセージを保存するために使用する状態変数を定義 */
-  const [messageValue, setMessageValue] = useState("");
-  /* すべてのwavesを保存する状態変数を定義 */
-  const [allWaves, setAllWaves] = useState([]);
-  console.log("currentAccount:", currentAccount);
-  /* デプロイされたコントラクトのアドレスを保持する変数を作成 */
-  const contractAddress = "0x7Aa8933fe2381464045B91dEd1766AB169c6d592";
+  console.log("currentAccount: ", currentAccount);
 
-  /* ABIの内容を参照する変数を作成 */
+  /* ユーザーのメッセージを保持するために状態変数を定義 */
+  const [messageValue, setMessageValue] = useState("");
+
+  /* デプロイされたコントラクトアドレスを保持する定数 */
+  const contractAddress = "0xBe170976fB8f991897979215139f4C51483f719C";
+
+  /* ABI の内容を参照する定数を追加 */
   const contractABI = abi.abi;
 
-
+  /* 全ての waves を保存する状態変数を定義 */
+  const [allWaves, setAllWaves] = useState([]);
 
   const getAllWaves = async () => {
     const { ethereum } = window;
@@ -113,7 +114,6 @@ const App = () => {
       console.log(error);
     }
   };
-
   const connectWallet = async () => {
     try {
       // ユーザーが認証可能なウォレットアドレスを持っているか確認
@@ -134,43 +134,30 @@ const App = () => {
   // waveの回数をカウントする関数を実装
   const wave = async () => {
     try {
-      // ユーザーがMetaMaskを持っているか確認
+      // ユーザーが metamask を持っているかどうかを確認
       const { ethereum } = window;
       if (ethereum) {
+        // provider は metamask を指す
         const provider = new ethers.providers.Web3Provider(ethereum);
+
         // ユーザーのウォレットアドレスを抽象化したもの
         const signer = provider.getSigner();
+
         const wavePortalContract = new ethers.Contract(
-          contractAddress, // コントラクトのデプロイ先アドレス、ローカル、テストネット、イーサリアムメインネット
-          contractABI,     // Application Binary Interface
-          signer           // provider もしくはsigner
+          contractAddress,  // コントラクトのデプロイ先アドレス
+          contractABI,  // アプリケーションバイナリインタフェース
+          signer  // provider or signer
         );
         let count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
-        let contractBalance = await provider.getBalance(wavePortalContract.address);
-        console.log("Contract balance:", ethers.utils.formatEther(contractBalance));
-
         const waveTxn = await wavePortalContract.wave(messageValue, { gasLimit: 300000, });
 
         console.log("Mining...", waveTxn.hash);
         await waveTxn.wait();
-        console.log("Mined -- ", waveTxn.hash);
+        console.log("Mining...", waveTxn.hash);
+
         count = await wavePortalContract.getTotalWaves();
         console.log("Retrieved total wave count...", count.toNumber());
-
-        let contractBalance_post = await provider.getBalance(
-          wavePortalContract.address
-        );
-        if (contractBalance_post.lt(contractBalance)) {
-          console.log("User won ETH");
-        } else {
-          console.log("User didn't win ETH");
-        }
-
-        console.log(
-          "Contract balance after wave: ",
-          ethers.utils.formatEther(contractBalance)
-        )
 
       } else {
         console.log("Ethereum object doesn't exist!");
@@ -203,7 +190,7 @@ const App = () => {
             ✨
           </span>
         </div>
-        {/* ウォレットコネクトのボタン実装 */}
+        {/* ウォレットコネクトボタンを実装 */}
         {!currentAccount && (
           <button className="waveButton" onClick={connectWallet}>
             Connect Wallet
@@ -214,7 +201,7 @@ const App = () => {
             Wallet Connected
           </button>
         )}
-        {/* waveボタンにwave関数を連動 */}
+        {/* wave ボタンに wave 関数を連動 */}
         <button className="waveButton" onClick={wave}>
           Wave at Me
         </button>
